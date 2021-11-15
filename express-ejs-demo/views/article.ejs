@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <h1>我是一个 ejs 模板引擎</h1>
+  <!-- 这里的 article 是和服务端对应的，是服务端返回的字段 -->
+  <!-- 这里的 - 号代表输出的是 HTML -->
+  <p>
+    <%-article%>
+  </p>
+  <h2>条件判断</h2>
+  <%if(flag==true){%>
+    <strong>flag=true</strong>
+  <%}%>
+  <%if(score>=50){%>
+    <strong>及格</strong>
+  <%}else{%>
+    <strong>不及格</strong>
+  <%}%>
+  <h2>循环遍历</h2>
+  <%for(let i=0;i<list.length;i++){%>
+    <li><%=list[i]%></li>
+  <%}%>
+  <%for(let i=0;i<newList.length;i++){%>
+    <li><%=newList[i].name%></li>
+  <%}%>
+  <h2>引入公共模板</h2>
+  <!-- <%- include('public.ejs')%> -->
+  <%- include('public.html')%>
+</body>
+
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <!-- css 属于静态资源，这里能够访问是因为在服务端设置了这个目录可以访问。对应的就是托管静态目录 -->
+  <link rel="stylesheet" href="../css/base.css">
+</head>
+
+<body>
+  <h1>我是一个 ejs 模板引擎</h1>
+  <!-- 这里的 article 是和服务端对应的，是服务端返回的字段 -->
+  <!-- 这里的 - 号代表输出的是 HTML -->
+  <p>
+    <%-article%>
+  </p>
+  <h2>条件判断</h2>
+  <%if(flag==true){%>
+    <strong>flag=true</strong>
+  <%}%>
+  <%if(score>=50){%>
+    <strong>及格</strong>
+  <%}else{%>
+    <strong>不及格</strong>
+  <%}%>
+  <h2>循环遍历</h2>
+  <%for(let i=0;i<list.length;i++){%>
+    <li><%=list[i]%></li>
+  <%}%>
+  <%for(let i=0;i<newList.length;i++){%>
+    <li><%=newList[i].name%></li>
+  <%}%>
+  <h2>引入公共模板</h2>
+  <%- include('public.ejs')%>
+</body>
+
+</html>
