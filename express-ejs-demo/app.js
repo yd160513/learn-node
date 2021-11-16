@@ -1,7 +1,27 @@
 const express = require('express')
 const ejs = require('ejs')
+// cookie-parser 中间件
+const cookieParser = require('cookie-parser')
+// express-session 中间件
+const session = require('express-session')
+
 // 实例化
 const app = express()
+// 配置 cookieParser 中间件
+app.use(cookieParser('xxxxx'))
+// 配置 express-session 中间件
+app.use(session({
+  secret: 'xxx', // 服务器端生成 session 的签名
+  name: 'username', // 修改 session 对应的 cookie 的名称
+  resave: false, // 强制保存 session 即使它没有变化
+  saveUninitialized: true, // 强制将未初始化的 session 存储
+  // rolling: true, // 每次请求时如果 session 对应的 cookie 还没有过期，这个时候会重置过期时间
+  cookie: {
+    maxAge: 1000 * 60, // 过期时间
+    secure: false, // true 表示只有 https 协议才能访问 cookie
+  }
+}))
+
 /**
  * 中间件:
  * 1. 应用级中间件
@@ -67,12 +87,60 @@ app.post('/doLogin', (req, res) => {
 })
 
 app.get('/', (req, res) => {
-  res.send('首页')
+  // 获取 session
+  if (req.session.username) {
+    res.send(`${req.session.username}已经登录`)
+  } else {
+
+    // 获取 cookie
+    let username = req.cookies.username
+    let username1 = req.signedCookies
+    console.log('获取到的 cookie:', username)
+    console.log('获取到加密的 cookie:', username1)
+
+    res.send('首页 - 没有登录')
+  }
 })
 app.get('/login', (req, res) => {
+  // 设置 session
+  req.session.username = '张三'
+
+  // 设置 cookie
+  res.cookie('username', 'zhangsan', {
+    maxAge: 1000 * 60 * 60, // 过期时间(毫秒)
+    // path: '/login', // 只能在当前路由下才能访问 cookie
+    // 多个域名共享 cookie: aaa.ityin.com  ===> bbb.itying.com
+    // domain: '.itying.com',
+    // secure: true, // 为 true 则代表只能在 https 中访问
+    /**
+     * 加密 cookie
+     * 1. 配置中间件时需要传入加密的参数
+     *    app.use(cookieParser('随便一个字符串'))
+     * 2. 从传入 signed 为 true
+     * 3. 获取 cookie
+     *    req.signedCookies.xxx
+     */
+    signed: true
+  })
+
   // get 方式获取传值
   // get.query
   res.render('login')
+})
+app.get('/logout', (req, res) => {
+  /**
+   * 销毁 session
+   * 1. 设置 session 过期时间为 0。这样会将所有 session 都销毁
+   *    req.session.cookie.maxAge = 0
+   * 2. 修改 session 的值
+   *    req.session.username = ''
+   * 3. 销毁所有 session: destory
+   */
+  // req.session.cookie.maxAge = 0
+  // req.session.username = ''
+  res.send(`${req.session.username} 退出登录 - logout`)
+  req.session.destroy()
+  console.log('req.session =>', req.session)
 })
 
 // 配置路由
@@ -115,6 +183,9 @@ app.get('/news/:id', (req, res) => {
 })
 // 配置路由
 app.get('/article', (req, res) => {
+  // 获取 cookie
+  let username = req.cookies.username
+  console.log('获取到的 cookie:', username)
   const article = `<h3 style="border: 1px solid red;">这是一段 HTML</h3>`
   const list = [1, 2, 3, 4, 5, 6]
   const newList = [{
