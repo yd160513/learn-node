@@ -4,6 +4,8 @@ const ejs = require('ejs')
 const cookieParser = require('cookie-parser')
 // express-session 中间件
 const session = require('express-session')
+// 引入外部模块
+const login = require('./routes/login')
 
 // 实例化
 const app = express()
@@ -65,6 +67,9 @@ app.use(express.static('static'))
 app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 
+// 挂在 login 模块
+app.use('/', login)
+
 // 1. 应用级中间件(用于权限判断)
 app.use((req, res, next) => {
   console.log(new Date())
@@ -72,35 +77,35 @@ app.use((req, res, next) => {
   next()
 })
 
-app.post('/doLogin', (req, res) => {
-  /**
-   * post 请求获取传过来的参数: req.bdody, 但是不可以直接使用。
-   * 需按照以下步骤:
-   * 1. app.use(express.urlencoded({ extended: false }))
-   * 2. app.use(express.json())
-   */
-  const params = req.body
-  console.log(req.body)
-  console.log('post 请求 - doLogin 传过来的参数: ', params.username)
-  console.log('post 请求 - doLogin 传过来的参数: ', params.password)
-  res.send(`执行提交 - ${params.username} - ${params.password}`)
-})
+// app.post('/doLogin', (req, res) => {
+//   /**
+//    * post 请求获取传过来的参数: req.bdody, 但是不可以直接使用。
+//    * 需按照以下步骤:
+//    * 1. app.use(express.urlencoded({ extended: false }))
+//    * 2. app.use(express.json())
+//    */
+//   const params = req.body
+//   console.log(req.body)
+//   console.log('post 请求 - doLogin 传过来的参数: ', params.username)
+//   console.log('post 请求 - doLogin 传过来的参数: ', params.password)
+//   res.send(`执行提交 - ${params.username} - ${params.password}`)
+// })
 
-app.get('/', (req, res) => {
-  // 获取 session
-  if (req.session.username) {
-    res.send(`${req.session.username}已经登录`)
-  } else {
+// app.get('/', (req, res) => {
+//   // 获取 session
+//   if (req.session.username) {
+//     res.send(`${req.session.username}已经登录`)
+//   } else {
 
-    // 获取 cookie
-    let username = req.cookies.username
-    let username1 = req.signedCookies
-    console.log('获取到的 cookie:', username)
-    console.log('获取到加密的 cookie:', username1)
+//     // 获取 cookie
+//     let username = req.cookies.username
+//     let username1 = req.signedCookies
+//     console.log('获取到的 cookie:', username)
+//     console.log('获取到加密的 cookie:', username1)
 
-    res.send('首页 - 没有登录')
-  }
-})
+//     res.send('首页 - 没有登录')
+//   }
+// })
 app.get('/login', (req, res) => {
   // 设置 session
   req.session.username = '张三'
