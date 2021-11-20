@@ -1,6 +1,8 @@
 const os = require('os')
 const http = require('http')
 const https = require('https')
+const Axios = require('axios')
+const path = require('path')
 // 小文件路径
 const filePath = '/Users/kouyidong/Documents/problem/20/upload-demo/物业关于摩托车、非机动车管理的通知.pdf'
 // 大文件路径
@@ -101,6 +103,58 @@ const getUploadURL = ({ protocol, endpoint, bucket, object }) => {
   return `${protocol}://${endpoint}/${bucket}${object}`
 }
 
+const getFileMimeAsync = function (extname) {
+  const data = fs.readFileSync('./static/assets/mime.json')
+  const mimeObj = JSON.parse(data.toString())
+  return mimeObj[extname]
+}
+
+// 上传接口
+const uploadApi = (url, filePath, sign) => {
+  const extname = path.extname(filePath)
+  // 生成对应的 Content-Type
+  const type = getFileMimeAsync(extname)
+  let config = {
+    headers: {
+      ...header,
+      'Content-type': type || 'text/plain',
+      'Authorization': sign.signature,
+      'x-amz-algorithm': 'AWS4-HMAC-SHA256',
+      'x-amz-content-sha256': sha256Str,
+      'x-amz-expires': '900', // 和服务端统一
+      'x-amz-date': sign.utcDate,
+
+    }
+  };
+  console.log('header =>', config)
+  console.time()
+  // 创建读取流
+  const readStream = fs.createReadStream(filePath)
+
+  // 读取次数
+  let count = 0
+  // 读取到的数据
+  let str = ''
+
+  // 监听读取数据
+  readStream.on('data', chunk => {
+    str += chunk
+    count++
+    Axios.put(url, chunk, config).then(res => {
+      console.log('读取中上传')
+    })
+  })
+  // 读取完毕
+  readStream.on('end', () => {
+    console.log(`读取完毕！一共读取了 ${count} 次。`)
+    console.timeEnd()
+  })
+  // 读取失败
+  readStream.on('error', (err) => {
+    console.log(err)
+  })
+}
+
 const uploadHandle = async (filePath) => {
   // 获取签名
   const sign = await getSTCSign(filePath)
@@ -109,13 +163,11 @@ const uploadHandle = async (filePath) => {
   const uploadURL = getUploadURL(sign)
   console.log(`上传路径为: ${uploadURL}`)
   // 上传文件
-  // ...
+  uploadApi(uploadURL, filePath, sign)
 }
 
 module.exports = {
   uploadHandle
-  // getSTCSign,
-  // getUploadURL
 }
 
 
