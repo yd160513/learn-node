@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>将文件上传到第三方服务器</title>
+</head>
+
+<body>
+  <h1>将文件上传到第三方服务器</h1>
+  <!-- enctype="multipart/form-data" 文件上传必须的属性 -->
+  <form action="/thirdPartyServer/doAdd" method="post">
+    路径: <input type="text" name="path" id="title" value="/Users/kouyidong/Documents/test/shoukuanma.png"> 
+    <!-- 路径: <input type="text" name="path" id="title" value="/Users/kouyidong/Documents/test/100M图片.jpg">  -->
+    <br>
+    <br>
+    <input type="submit" value="提交">
+  </form>
+</body>
+
+</html>

@@ -5,7 +5,7 @@ const Axios = require('axios')
 const path = require('path')
 // 小文件路径
 // const filePath = '/Users/kouyidong/Documents/problem/20/upload-demo/物业关于摩托车、非机动车管理的通知.pdf'
-// const filePath = '/Users/kouyidong/Documents/test/shoukuanma.png'
+const filePath = '/Users/kouyidong/Documents/test/shoukuanma.png'
 
 // 大文件路径
 // const filePath = '/Users/kouyidong/Documents/problem/20/upload-demo/4.73 G的压缩包.zip'
@@ -110,7 +110,7 @@ const getFileMimeAsync = function (extname) {
   let data
   try {
     // 当做服务启动的时候
-    // const data = fs.readFileSync('./static/assets/mime.json')
+    // data = fs.readFileSync('./static/assets/mime.json')
     // debug 当前文件的时候
     data = fs.readFileSync('./upload-demo/static/assets/mime.json')
   } catch (error) {
@@ -203,10 +203,17 @@ const uploadHandle = async (filePath) => {
   readStreamHandle(uploadURL, filePath, sign)
 }
 
-uploadHandle(filePath)
-
 module.exports = {
-  uploadHandle
+  // 根据 sign 获取上传接口
+  getUploadURL,
+  // 获取 Content-Type
+  getFileMimeAsync,
+  // 请求头
+  header,
+  // 文件路径
+  filePath,
+  // 获取签名
+  getSTCSign
 }
 
 

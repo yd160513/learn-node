@@ -6,9 +6,7 @@ const cookieParser = require('cookie-parser')
 const session = require('express-session')
 
 // 引入外部模块
-const admin = require('./routes/admin')
 const index = require('./routes/index')
-const api = require('./routes/api')
 
 // 实例化
 const app = express()
@@ -78,9 +76,7 @@ app.use((req, res, next) => {
 })
 
 // 配置外部路由模块
-app.use('/admin', admin)
-app.use('/', index)
-app.use('/api', api)
+app.use('/', index) // 上传
 
 app.use((req, res, next) => {
   res.status(404).send('404')
