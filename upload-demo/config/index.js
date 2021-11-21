@@ -4,9 +4,12 @@ const https = require('https')
 const Axios = require('axios')
 const path = require('path')
 // 小文件路径
-const filePath = '/Users/kouyidong/Documents/problem/20/upload-demo/物业关于摩托车、非机动车管理的通知.pdf'
+// const filePath = '/Users/kouyidong/Documents/problem/20/upload-demo/物业关于摩托车、非机动车管理的通知.pdf'
+// const filePath = '/Users/kouyidong/Documents/test/shoukuanma.png'
+
 // 大文件路径
 // const filePath = '/Users/kouyidong/Documents/problem/20/upload-demo/4.73 G的压缩包.zip'
+// const filePath = '/Users/kouyidong/Documents/test/100M图片.jpg'
 const sha256 = require("sha256")
 const fs = require('fs')
 const { v4: uuidv4 } = require('uuid');
@@ -104,13 +107,45 @@ const getUploadURL = ({ protocol, endpoint, bucket, object }) => {
 }
 
 const getFileMimeAsync = function (extname) {
-  const data = fs.readFileSync('./static/assets/mime.json')
+  let data
+  try {
+    // 当做服务启动的时候
+    // const data = fs.readFileSync('./static/assets/mime.json')
+    // debug 当前文件的时候
+    data = fs.readFileSync('./upload-demo/static/assets/mime.json')
+  } catch (error) {
+    console.log(error)
+    data = {}
+  }
   const mimeObj = JSON.parse(data.toString())
   return mimeObj[extname]
 }
 
-// 上传接口
-const uploadApi = (url, filePath, sign) => {
+// 上传第二部: 上传
+const uploadApi = (url, filePath, sign, chunk) => {
+  const extname = path.extname(filePath)
+  // 生成对应的 Content-Type
+  const type = getFileMimeAsync(extname)
+  let config = {
+    headers: {
+      ...header,
+      'Content-type': type || 'text/plain',
+      'Authorization': sign.signature,
+      'x-amz-algorithm': 'AWS4-HMAC-SHA256',
+      'x-amz-content-sha256': sha256Str,
+      'x-amz-expires': '900', // 和服务端统一
+      'x-amz-date': sign.utcDate,
+    }
+  };
+  Axios.put(url, chunk, config).then(res => {
+    console.log('当前 chunk 上传完毕')
+  }).catch(err => {
+    console.log('上传失败', err)
+  })
+}
+
+// 上传第一步: 读流
+const readStreamHandle = (url, filePath, sign) => {
   const extname = path.extname(filePath)
   // 生成对应的 Content-Type
   const type = getFileMimeAsync(extname)
@@ -127,27 +162,29 @@ const uploadApi = (url, filePath, sign) => {
     }
   };
   console.log('header =>', config)
-  console.time()
   // 创建读取流
   const readStream = fs.createReadStream(filePath)
 
   // 读取次数
   let count = 0
   // 读取到的数据
-  let str = ''
+  const chunks = []
 
   // 监听读取数据
   readStream.on('data', chunk => {
-    str += chunk
+    chunks.push(chunk)
     count++
-    Axios.put(url, chunk, config).then(res => {
-      console.log('读取中上传')
-    })
   })
   // 读取完毕
   readStream.on('end', () => {
+    const bufData = Buffer.concat(chunks)
     console.log(`读取完毕！一共读取了 ${count} 次。`)
-    console.timeEnd()
+    console.log('开始异步上传')
+    try {
+      uploadApi(url, filePath, sign, bufData)
+    } catch (error) {
+      console.log('try catch 捕获到错误: ', error)
+    }
   })
   // 读取失败
   readStream.on('error', (err) => {
@@ -163,8 +200,10 @@ const uploadHandle = async (filePath) => {
   const uploadURL = getUploadURL(sign)
   console.log(`上传路径为: ${uploadURL}`)
   // 上传文件
-  uploadApi(uploadURL, filePath, sign)
+  readStreamHandle(uploadURL, filePath, sign)
 }
+
+uploadHandle(filePath)
 
 module.exports = {
   uploadHandle

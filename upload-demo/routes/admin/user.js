@@ -12,7 +12,6 @@ router.get('/', (req, res) => {
 
 router.get('/add', (req, res) => {
   res.render('admin/user/add.html')
-  // res.send('增加用户')
 })
 
 router.get('/edit', (req, res) => {
@@ -46,54 +45,12 @@ router.post('/doAdd', multipleFile, (req, res) => {
     return res.send(`${filePath} 路径不存在`)
   }
   console.log(`${filePath} 路径正确`)
-
-  // 读文件流 -----------------
-  // 创建读取流
-  const readStream = createReadStream(filePath)
-
-  // 读取次数
-  let count = 0
-  // 读取到的数据
-  let str = ''
-
-  /**
-   * 监听读取数据
-   * chunk: 是 Buffer 类型
-   */
-  readStream.on('data', async (chunk) => {
-    str += chunk
-    count++
-    console.log(`当前读取次数为: ${count}`)
-
-    uploadHandle(filePath)
-
-    // // 获取签名
-    // const sign = await getSTCSign(filePath)
-    // console.log(`获取到的签名是: `, sign)
-
-    // // 获取上传路径
-    // getUploadURL(sign)
-
-    // // 开始上传
-
-  })
-  // 读取完毕
-  readStream.on('end', () => {
-    console.log(`总读取次数为: ${count}`)
-  })
-  // 读取失败
-  readStream.on('error', (err) => {
-    console.log(err)
-  })
-
-
+  // 开始上传
+  uploadHandle(filePath)
+  
   res.send({
     params: req.body
   })
-})
-
-router.post('/doEdit', (req, res) => {
-  res.send('执行修改')
 })
 
 module.exports = router
