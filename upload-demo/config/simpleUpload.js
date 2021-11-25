@@ -1,9 +1,21 @@
 
-const os = require('os')
 const http = require('http')
 const https = require('https')
 const Axios = require('axios')
 const path = require('path')
+const fs = require('fs')
+const { v4: uuidv4 } = require('uuid');
+const { filePath,
+  sha256,
+  sha256Str,
+  appToken,
+  uid,
+  lastOcode,
+  beemLang,
+  version,
+  context,
+  ver,
+  header } = require('./index')
 
 /**
  * 根据文件名称返回上传文件需要的 object
@@ -163,6 +175,8 @@ const uploadHandle = async (filePath) => {
   // 上传文件
   readStreamHandle(uploadURL, filePath, sign)
 }
+
+uploadHandle(filePath)
 
 module.exports = {
   // 上传入口
