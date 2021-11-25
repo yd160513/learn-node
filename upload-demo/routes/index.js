@@ -1,4 +1,8 @@
 const express = require('express')
+const thirdPartyServer = require('./upload/thirdPartyServer')
+const selfNodeServer = require('./upload/selfNodeServer')
+
+
 // 路由模块化
 const router = express.Router()
 
@@ -10,5 +14,8 @@ router.get('/', (req, res) => {
 router.get('/upload', (req, res) => {
   res.render('upload/selfNodeServer.html')
 })
+
+router.use('/thirdPartyServer', thirdPartyServer)
+router.use('/selfNodeServer', selfNodeServer)
 
 module.exports = router

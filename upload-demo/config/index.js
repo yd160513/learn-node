@@ -110,9 +110,9 @@ const getFileMimeAsync = function (extname) {
   let data
   try {
     // 当做服务启动的时候
-    // data = fs.readFileSync('./static/assets/mime.json')
+    data = fs.readFileSync('./static/assets/mime.json')
     // debug 当前文件的时候
-    data = fs.readFileSync('./upload-demo/static/assets/mime.json')
+    // data = fs.readFileSync('./upload-demo/static/assets/mime.json')
   } catch (error) {
     console.log(error)
     data = {}
@@ -204,6 +204,8 @@ const uploadHandle = async (filePath) => {
 }
 
 module.exports = {
+  // 上传入口
+  uploadHandle,
   // 根据 sign 获取上传接口
   getUploadURL,
   // 获取 Content-Type
