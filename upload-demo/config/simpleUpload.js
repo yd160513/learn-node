@@ -5,6 +5,7 @@ const Axios = require('axios')
 const path = require('path')
 const fs = require('fs')
 const { v4: uuidv4 } = require('uuid');
+const { put } = require('request')
 const { filePath,
   sha256,
   sha256Str,
@@ -83,9 +84,9 @@ const getFileMimeAsync = function (extname) {
   let data
   try {
     // 当做服务启动的时候
-    data = fs.readFileSync('./static/assets/mime.json')
+    // data = fs.readFileSync('./static/assets/mime.json')
     // debug 当前文件的时候
-    // data = fs.readFileSync('./upload-demo/static/assets/mime.json')
+    data = fs.readFileSync('../../upload-demo/static/assets/mime.json')
   } catch (error) {
     console.log(error)
     data = {}
@@ -99,22 +100,26 @@ const uploadApi = (url, filePath, sign, chunk) => {
   const extname = path.extname(filePath)
   // 生成对应的 Content-Type
   const type = getFileMimeAsync(extname)
-  let config = {
-    headers: {
-      ...header,
-      'Content-type': type || 'text/plain',
-      'Authorization': sign.signature,
-      'x-amz-algorithm': 'AWS4-HMAC-SHA256',
-      'x-amz-content-sha256': sha256Str,
-      'x-amz-expires': '900', // 和服务端统一
-      'x-amz-date': sign.utcDate,
+  const headers = {
+    ...header,
+    'Content-type': type || 'text/plain',
+    'Authorization': sign.signature,
+    'x-amz-algorithm': 'AWS4-HMAC-SHA256',
+    'x-amz-content-sha256': sha256Str,
+    'x-amz-expires': '900', // 和服务端统一
+    'x-amz-date': sign.utcDate,
+  }
+  const options = {
+    url,
+    headers,
+    body: chunk
+  }
+  put(options, function (error, response, body) {
+    if (error || response.statusCode !== 200) {
+      return console.error(`文件上传失败!`, { error, code: response.statusCode })
     }
-  };
-  Axios.put(url, chunk, config).then(res => {
-    console.log('当前 chunk 上传完毕')
-  }).catch(err => {
-    console.log('上传失败', err)
-  })
+    console.log(`上传成功!`, body)
+  });
 }
 
 // 上传第一步: 读流
