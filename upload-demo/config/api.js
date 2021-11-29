@@ -19,87 +19,9 @@ const fileType = extname(fileName)
 
 let globalSign = null
 
-
-// /**
-//  * 获取 URL
-//  * @param {string} name 文件名称(包含后缀名)
-//  * @returns 
-//  */
-// const getObject = (name) => {
-//   // 获取文件后缀名(.xxx)
-//   const type = extname(name)
-//   const randomName = `${UUId.generate()}${new Date().getTime()}`
-//   const url = `/beem/${randomName}${type}`
-//   return url
-// }
-
-// const signApi = (url, args) => {
-//   const options = {
-//     url,
-//     method: 'GET',
-//     body: args,
-//     headers
-//   }
-
-//   request(options, (error, response, body) => {
-//     if (error || response.statusCode !== 200) {
-//       return console.error(`GET 接口请求失败!`, { error, code: response.statusCode })
-//     }
-//     console.log(`GET 接口请求成功!`, body)
-//   })
-
-//   // const res = await axiosGet({
-//   //   url: publicUrl.getSTCSign,
-//   //   params: {
-//   //     method,
-//   //     object
-//   //   },
-//   //   config: {
-//   //     headers: {
-//   //       'x-amz-algorithm': 'AWS4-HMAC-SHA256',
-//   //       'x-amz-content-sha256': sha256Str,
-//   //       'x-amz-expires': '900' // 和服务端统一
-//   //       // 'x-amz-date': '' // 不传这个，按服务器的走
-//   //     }
-//   //   }
-//   // });
-// }
-
-// /**
-//  * 获取签名
-//  * @param {string} method 接口请求类型 (PUT: 上传, POST: 组合分片)
-//  * @param {string} args 请求参数 (1. 创建上传的时候为 'uploads'。 2. 分片上传时为 `partNumber=${partNumber}&uploadId=${UploadId}`。 3.组合上传时为 `uploadId=${UploadId}`)
-//  * @param {string} url 最终可访问的文件所在的服务器地址
-//  */
-// const getSign = (url, method, args) => {
-//   // 如果有参数的话就拼接上参数
-//   const uploadURL = args ? `${url}?${args}` : url
-//   const params = {
-//     method,
-//     url
-//   }
-//   signApi(uploadURL, params)
-// }
-
-// // 简单上传
-// const simpleUpload = () => {
-//   // 文件服务器地址
-//   const url = getObject(fileName)
-//   getSign(url, 'PUT')
-// }
-
-
-
-
-
-
-
-
-
-// --------------------------------
 // 添加请求拦截器
 Axios.interceptors.request.use(function (config) {
-  // console.log('请求头: ', JSON.stringify(config.headers))
+  console.log('请求头: ', JSON.stringify(config.headers))
   // 在发送请求之前做些什么
   return config;
 }, function (error) {
@@ -148,7 +70,9 @@ const postApi = ({ url, header, params }) => {
       method: 'post',
       url,
       params,
-      headers: header
+      headers: {
+        ...header
+      }
     }).then(res => {
       resolve(res);
     }).catch(error => {
@@ -255,7 +179,7 @@ const getPartFile = (startPos, endPos) => {
 // 分片计算
 const computeHandle = async () => {
   // 每块大小
-  const chunkSize = 1024 * 1024 * 10 // 10M
+  const chunkSize = 20480 // 20kb
   console.log('分块大小: ', chunkSize)
   // 文件大小
   const fileSize = statSync(filePath).size
@@ -334,7 +258,7 @@ const createUploadHandle = async (args) => {
 }
 
 const putApi = ({ url, params, header }) => {
-  console.log(`putApi: `, { url, params, header })
+  // console.log(`putApi: `, { url, params, header })
   return new Promise((resolve, reject) => {
     Axios({
       method: 'put',
@@ -398,37 +322,50 @@ const partUpload = async (args) => {
   }
 }
 
+// 组合分片
+const postApi2 = ({ url, params, header }) => {
+  return new Promise((resolve, reject) => {
+    Axios.post(url, params.xml, { headers: header }).then(res => {
+      resolve(res.data);
+    }).catch(error => {
+      reject(error);
+    })
+  })
+}
+
 // 组合分片并结束上传
 const completeMultipartUpload = async (url, parts) => {
   const { signature, utcDate } = globalSign
 
   const elements = []
   parts.map(item => {
-    elements.push(
-      {
-        type: 'element',
-        name: 'Part',
-        elements: [{
+    if (item && item.eTag) {
+      elements.push(
+        {
           type: 'element',
-          name: 'ETag',
-          elements: [
-            {
-              type: 'text',
-              text: item.eTag
-            }
-          ]
-        }, {
-          type: 'element',
-          name: 'PartNumber',
-          elements: [
-            {
-              type: 'text',
-              text: item.partNumber
-            }
-          ]
-        }]
-      }
-    )
+          name: 'Part',
+          elements: [{
+            type: 'element',
+            name: 'ETag',
+            elements: [
+              {
+                type: 'text',
+                text: item.eTag
+              }
+            ]
+          }, {
+            type: 'element',
+            name: 'PartNumber',
+            elements: [
+              {
+                type: 'text',
+                text: item.partNumber
+              }
+            ]
+          }]
+        }
+      )
+    }
   })
 
   const XMLJson = {
@@ -455,6 +392,7 @@ const completeMultipartUpload = async (url, parts) => {
       xml: xmlStr
     },
     header: {
+      // ...header,
       'Content-type': 'text/xml',
       'Authorization': signature,
       'x-amz-algorithm': 'AWS4-HMAC-SHA256',
@@ -464,8 +402,7 @@ const completeMultipartUpload = async (url, parts) => {
     }
   }
   console.log('组合分片的参数: ', JSON.stringify(params))
-  let res = await postApi(params)
-  
+  let res = await postApi2(params)
   return res
 }
 
