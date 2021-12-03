@@ -4,7 +4,6 @@ const Axios = require('axios')
 const { v4: uuidv4 } = require('uuid');
 const mime = require('mime-types')
 const { json2xml, xml2json } = require('xml-js')
-
 const {
   filePath,
   context,
@@ -15,19 +14,9 @@ const {
 const fileName = basename(filePath)
 
 const fileType = extname(fileName)
-// const headers = getHeaders(fileType)
 
 let globalSign = null
 
-// 添加请求拦截器
-Axios.interceptors.request.use(function (config) {
-  console.log('请求头: ', JSON.stringify(config.headers))
-  // 在发送请求之前做些什么
-  return config;
-}, function (error) {
-  // 对请求错误做些什么
-  return Promise.reject(error);
-});
 /**
  * 根据 json 转 xml 字符串
  * @param {xml} args 要被转换为 json 的 xml
@@ -47,21 +36,6 @@ const xmlToJson = (args) => {
 // 根据文件类型获取对应的 Content-Type
 const getFileMimeAsync = function (type) {
   return mime.lookup(type)
-}
-
-const getHeaders = (fileType, sign) => {
-  // 生成对应的 Content-Type
-  const type = getFileMimeAsync(fileType)
-  const headers = {
-    ...header,
-    'Content-type': type || 'text/plain',
-    'Authorization': sign.signature,
-    'x-amz-algorithm': 'AWS4-HMAC-SHA256',
-    'x-amz-content-sha256': sha256Str,
-    'x-amz-expires': '900', // 和服务端统一
-    'x-amz-date': sign.utcDate,
-  }
-  return headers
 }
 
 const postApi = ({ url, header, params }) => {
@@ -136,15 +110,6 @@ const getSTCSignHandle = async (method, object) => {
     method
   }
   const res = await getApi(config)
-  return res
-}
-
-const getSTCSign = async () => {
-  const object = getObject(fileName)
-  // 上传时的参数
-  const args = `${object}?uploads`
-  // 获取签名
-  const res = await getSTCSignHandle('POST', args);
   return res
 }
 
@@ -487,14 +452,3 @@ upload()
 
 
 
-
-
-
-
-
-
-
-
-
-
-// 该计算分片啦~
