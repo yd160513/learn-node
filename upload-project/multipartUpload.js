@@ -7,6 +7,18 @@ const fileName = basename(filePath)
 const fileType = extname(fileName)
 let globalSign = null
 
+let uploadMax = 3; // 上传时最大切片的个数
+const cancels = []; // 存储要取消的请求
+const tempFilesArr = []; // 所选中的所有文件信息，处理过之后的（增加了很多字段）。
+
+// 每个格式化之后的文件对象中应该有什么
+const tempFileObj = {
+  createUploadIsError: false, // 创建上传接口是否失败
+  statusStr: '正在上传', // 上传状态提示
+  chunkList: [], // 分片 list
+  uploadProgress: 0, // 上传进度
+  hashProgress: 0, // 
+}
 
 const getUploadURL = (object) => {
   const { protocol, endpoint, bucket } = globalSign
